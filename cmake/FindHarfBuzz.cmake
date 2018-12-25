@@ -47,6 +47,7 @@ find_path(
   PATH_SUFFIXES
     src
     harfbuzz
+  NO_CMAKE_FIND_ROOT_PATH
 )
 
 if(NOT HARFBUZZ_LIBRARY)
@@ -57,6 +58,7 @@ if(NOT HARFBUZZ_LIBRARY)
     ${HARFBUZZ_FIND_ARGS}
     PATH_SUFFIXES
       lib
+    NO_CMAKE_FIND_ROOT_PATH
   )
 else()
   # on Windows, ensure paths are in canonical format (forward slahes):
