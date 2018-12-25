@@ -11,7 +11,12 @@
 #ifdef _WIN32
   #include "os/win/event_queue.h"
 #elif __APPLE__
-  #include "os/osx/event_queue.h"
+  #include <TargetConditionals.h>
+  #if TARGET_OS_IPHONE
+    #include "os/ios/event_queue.h"
+  #else
+    #include "os/osx/event_queue.h"
+  #endif
 #else
   #include "os/x11/event_queue.h"
 #endif

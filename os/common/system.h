@@ -8,9 +8,13 @@
 #define OS_COMMON_SYSTEM_H
 #pragma once
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #ifdef _WIN32
   #include "os/win/native_dialogs.h"
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !TARGET_OS_IPHONE
   #include "os/osx/app.h"
   #include "os/osx/menus.h"
   #include "os/osx/native_dialogs.h"
@@ -31,7 +35,7 @@
 
 namespace os {
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
 Logger* getOsxLogger();
 #endif
 
@@ -56,13 +60,13 @@ public:
   }
 
   void activateApp() override {
-#if __APPLE__
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
     OSXApp::instance()->activateApp();
 #endif
   }
 
   void finishLaunching() override {
-#if __APPLE__
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
     // Start processing NSApplicationDelegate events. (E.g. after
     // calling this we'll receive application:openFiles: and we'll
     // generate DropFiles events.)  events
@@ -83,7 +87,7 @@ public:
 #endif
 
   Logger* logger() override {
-#ifdef __APPLE__
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
     return getOsxLogger();
 #else
     return nullptr;
@@ -91,7 +95,7 @@ public:
   }
 
   Menus* menus() override {
-#ifdef __APPLE__
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
     if (!m_menus)
       m_menus = new MenusOSX();
 #endif
@@ -102,7 +106,7 @@ public:
 #ifdef _WIN32
     if (!m_nativeDialogs)
       m_nativeDialogs = new NativeDialogsWin32();
-#elif defined(__APPLE__)
+#elif defined(__APPLE__) && !TARGET_OS_IPHONE
     if (!m_nativeDialogs)
       m_nativeDialogs = new NativeDialogsOSX();
 #elif defined(LAF_OS_WITH_GTK)

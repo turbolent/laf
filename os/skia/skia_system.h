@@ -22,9 +22,15 @@
   #include "os/win/system.h"
   #define SkiaSystemBase WindowSystem
 #elif __APPLE__
-  #include "os/osx/color_space.h"
-  #include "os/osx/system.h"
-  #define SkiaSystemBase OSXSystem
+  #include <TargetConditionals.h>
+  #if TARGET_OS_IPHONE
+    #include "os/ios/system.h"
+    #define SkiaSystemBase IOSSystem
+  #else
+    #include "os/osx/color_space.h"
+    #include "os/osx/system.h"
+    #define SkiaSystemBase OSXSystem
+  #endif
 #else
   #include "os/x11/system.h"
   #define SkiaSystemBase X11System
@@ -123,7 +129,7 @@ public:
     list.push_back(createColorSpace(gfx::ColorSpace::MakeNone()));
     list.push_back(createColorSpace(gfx::ColorSpace::MakeSRGB()));
 
-#if defined(_WIN32) || defined(__APPLE__)
+#if defined(_WIN32) || (defined(__APPLE__) && !TARGET_OS_IPHONE)
     list_display_colorspaces(list);
 #endif
   }

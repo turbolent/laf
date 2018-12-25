@@ -14,7 +14,12 @@
 #if _WIN32
   #include <windows.h>
 #elif __APPLE__
-  #include "os/osx/app.h"
+  #include <TargetConditionals.h>
+  #if TARGET_OS_IPHONE
+    #include "os/ios/app.h"
+  #else
+    #include "os/osx/app.h"
+  #endif
 #else
   #include "os/x11/x11.h"
 #endif
@@ -56,10 +61,15 @@ int wmain(int argc, wchar_t* wargv[], wchar_t* envp[]) {
 #endif
 
 int main(int argc, char* argv[]) {
-#if __APPLE__
+#if defined(__APPLE__)
+#if TARGET_OS_IPHONE
+  os::IOSApp app;
+  return app.init(argc, argv);
+#else
   os::OSXApp app;
   if (!app.init())
     return 1;
+#endif
 #elif !defined(_WIN32)
   os::X11 x11;
 #endif

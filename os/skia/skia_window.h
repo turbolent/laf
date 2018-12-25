@@ -11,7 +11,12 @@
 #ifdef _WIN32
   #include "os/skia/skia_window_win.h"
 #elif __APPLE__
-  #include "os/skia/skia_window_osx.h"
+  #include <TargetConditionals.h>
+  #if TARGET_OS_IPHONE
+    #include "os/skia/skia_window_ios.h"
+  #else
+    #include "os/skia/skia_window_osx.h"
+  #endif
 #else
   #include "os/skia/skia_window_x11.h"
 #endif

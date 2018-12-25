@@ -22,20 +22,31 @@ if(WIN32)
     win/window.cpp
     win/window_dde.cpp)
 elseif(APPLE)
-  find_library(COCOA_LIBRARY Cocoa)
-  find_library(CARBON_LIBRARY Carbon)
-  if(COCOA_LIBRARY)
-    list(APPEND LAF_OS_SOURCES
-      osx/app.mm
-      osx/app_delegate.mm
-      osx/color_space.mm
-      osx/event_queue.mm
-      osx/keys.mm
-      osx/logger.mm
-      osx/menus.mm
-      osx/native_dialogs.mm
-      osx/view.mm
-      osx/window.mm)
+  if (IOS)
+    find_library(UIKIT_LIBRARY UIKit)
+    if(UIKIT_LIBRARY)
+      list(APPEND LAF_OS_SOURCES
+        ios/app.mm
+        ios/app_delegate.mm
+        ios/event_queue.mm
+        ios/window.mm)
+    endif()
+  else()
+    find_library(COCOA_LIBRARY Cocoa)
+    find_library(CARBON_LIBRARY Carbon)
+    if(COCOA_LIBRARY)
+      list(APPEND LAF_OS_SOURCES
+        osx/app.mm
+        osx/app_delegate.mm
+        osx/color_space.mm
+        osx/event_queue.mm
+        osx/keys.mm
+        osx/logger.mm
+        osx/menus.mm
+        osx/native_dialogs.mm
+        osx/view.mm
+        osx/window.mm)
+    endif()
   endif()
 else()
   list(APPEND LAF_OS_SOURCES
@@ -65,22 +76,26 @@ if(LAF_OS_BACKEND STREQUAL "skia")
     endif()
   endif()
 
-  find_library(SKIA_LIBRARY skia PATH "${SKIA_OUT_DIR}")
+  find_library(SKIA_LIBRARY skia PATH "${SKIA_OUT_DIR}" NO_CMAKE_FIND_ROOT_PATH)
   if(WIN32)
     find_library(SKIA_OPENGL_LIBRARY opengl32)
+  elseif(IOS)
+    find_library(SKIA_OPENGL_LIBRARY OpenGLES NAMES OpenGLES)
+    find_library(SKIA_COREGRAPHICS_LIBRARY CoreGraphics NAMES CoreGraphics)
+    find_library(SKIA_CORETEXT_LIBRARY CoreText NAMES CoreText)
   else()
     find_library(SKIA_OPENGL_LIBRARY opengl NAMES GL)
   endif()
 
-  find_path(SKIA_CONFIG_INCLUDE_DIR SkUserConfig.h HINTS "${SKIA_DIR}/include/config")
-  find_path(SKIA_CORE_INCLUDE_DIR SkCanvas.h HINTS "${SKIA_DIR}/include/core")
-  find_path(SKIA_UTILS_INCLUDE_DIR SkRandom.h HINTS "${SKIA_DIR}/include/utils")
-  find_path(SKIA_CODEC_INCLUDE_DIR SkCodec.h HINTS "${SKIA_DIR}/include/codec")
-  find_path(SKIA_EFFECTS_INCLUDE_DIR SkImageSource.h HINTS "${SKIA_DIR}/include/effects")
-  find_path(SKIA_GPU_INCLUDE_DIR GrContext.h HINTS "${SKIA_DIR}/include/gpu")
-  find_path(SKIA_GPU2_INCLUDE_DIR gl/GrGLDefines.h HINTS "${SKIA_DIR}/src/gpu")
-  find_path(SKIA_ANGLE_INCLUDE_DIR angle_gl.h HINTS "${SKIA_DIR}/third_party/externals/angle2/include")
-  find_path(SKIA_SKCMS_INCLUDE_DIR skcms.h HINTS "${SKIA_DIR}/third_party/skcms")
+  find_path(SKIA_CONFIG_INCLUDE_DIR SkUserConfig.h HINTS "${SKIA_DIR}/include/config" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_CORE_INCLUDE_DIR SkCanvas.h HINTS "${SKIA_DIR}/include/core" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_UTILS_INCLUDE_DIR SkRandom.h HINTS "${SKIA_DIR}/include/utils" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_CODEC_INCLUDE_DIR SkCodec.h HINTS "${SKIA_DIR}/include/codec" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_EFFECTS_INCLUDE_DIR SkImageSource.h HINTS "${SKIA_DIR}/include/effects" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_GPU_INCLUDE_DIR GrContext.h HINTS "${SKIA_DIR}/include/gpu" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_GPU2_INCLUDE_DIR gl/GrGLDefines.h HINTS "${SKIA_DIR}/src/gpu" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_ANGLE_INCLUDE_DIR angle_gl.h HINTS "${SKIA_DIR}/third_party/externals/angle2/include" NO_CMAKE_FIND_ROOT_PATH)
+  find_path(SKIA_SKCMS_INCLUDE_DIR skcms.h HINTS "${SKIA_DIR}/third_party/skcms" NO_CMAKE_FIND_ROOT_PATH)
 
   include_directories(
     ${SKIA_CONFIG_INCLUDE_DIR}
@@ -98,6 +113,8 @@ if(LAF_OS_BACKEND STREQUAL "skia")
   set(SKIA_LIBRARIES
     ${SKIA_LIBRARY}
     ${SKIA_OPENGL_LIBRARY}
+    ${SKIA_CORETEXT_LIBRARY}
+    ${SKIA_COREGRAPHICS_LIBRARY}
     ${LAF_FREETYPE_LIBRARIES}
     CACHE INTERNAL "Skia libraries")
 
@@ -112,8 +129,13 @@ if(LAF_OS_BACKEND STREQUAL "skia")
     list(APPEND LAF_OS_SOURCES
       skia/skia_window_win.cpp)
   elseif(APPLE)
-    list(APPEND LAF_OS_SOURCES
-      skia/skia_window_osx.mm)
+    if (IOS)
+      list(APPEND LAF_OS_SOURCES
+        skia/skia_window_ios.mm)
+    else()
+      list(APPEND LAF_OS_SOURCES
+        skia/skia_window_osx.mm)
+    endif()
   else()
     list(APPEND LAF_OS_SOURCES
       skia/skia_window_x11.cpp)
@@ -143,6 +165,11 @@ elseif(APPLE)
     list(APPEND LAF_OS_PLATFORM_LIBS
       ${COCOA_LIBRARY}
       ${CARBON_LIBRARY})
+  endif()
+
+  if (UIKIT_LIBRARY)
+  list(APPEND LAF_OS_PLATFORM_LIBS
+    ${UIKIT_LIBRARY})
   endif()
 
   target_compile_options(laf-os PRIVATE
@@ -189,7 +216,11 @@ if(LAF_OS_BACKEND STREQUAL "skia")
     target_compile_definitions(laf-os PRIVATE SK_BUILD_FOR_WIN32
       _CRT_SECURE_NO_WARNINGS)
   elseif(APPLE)
-    target_compile_definitions(laf-os PRIVATE SK_BUILD_FOR_MAC)
+    if(IOS)
+     target_compile_definitions(laf-os PRIVATE SK_BUILD_FOR_IOS)
+    else()
+      target_compile_definitions(laf-os PRIVATE SK_BUILD_FOR_MAC)
+    endif()
   else()
     target_compile_definitions(laf-os PRIVATE SK_SAMPLES_FOR_X)
   endif()
